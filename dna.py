@@ -15,16 +15,6 @@ class Node(object):
         self.nodetype = nodetype
         self.inputs = set()
         self.outputs = set()
-        # if in_edges is not None:
-        #     if isinstance(in_edges, set):
-        #         self.inputs = in_edges
-        #     else:
-        #         self.inputs = set([in_edges])
-        # if out_edges is not None:
-        #     if isinstance(out_edges, set):
-        #         self.outputs = out_edges
-        #     else:
-        #         self.outputs = set([out_edges])
         self.inputs_mutable = True
         self.outputs_mutable = True
         self.params_mutable = True
@@ -55,9 +45,6 @@ class NetModule(object):
         self.edges = dict()
         self.graph = nx.DiGraph()
         
-        # self.nodes['data'] = 'FIXED1'
-        # self.nodes['output'] = 'FIXED2'
-
         # one input node
         inputnode_id = 'in'
         input_node = Node(inputnode_id, 'identity', None)
@@ -167,5 +154,4 @@ if __name__ == '__main__':
         ret = m.add_edge(e)
         print('return', ret)
         # ret = m.add_edge(e)
-    
     

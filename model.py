@@ -37,3 +37,10 @@ class CustomModel():
         score = self.model.evaluate(x_test, y_test, verbose=0)
 
         return score
+
+
+def build_module(inputs, module):
+    
+    out_edges = module.nodes['in'].outputs
+
+    for edge in out_edges[]
