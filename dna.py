@@ -3,6 +3,15 @@ import random
 import networkx as nx
 import copy
 
+
+import keras
+from keras.models import Sequential, Model
+from keras.layers import Dense, Dropout, Flatten, Activation, ELU
+from keras.layers import Conv2D, MaxPooling2D, Input
+from keras import backend as K
+from keras.utils import plot_model
+from Queue import Queue
+
 nodetypes = ['merge', 'activation', 'identity']
 edgetype = ['fc', 'identity']
 
@@ -135,23 +144,88 @@ class NetModule(object):
             self.edges[edgeid].in_node = new_node.nodeid
             self.add_edge(new_edge)
     
+    def add_random_edge(self):
+        ret = -1
+        while (ret==-1):
+            n = random.sample(m.nodes, 2)
+            e = Edge(len(m.edges)+1, 'fc',  n[0], n[1])
+            ret = m.add_edge(e)
             
-            
+    def split_random_edge(self):
+        edge_to_split = random.choice(m.edge_ids())
+        m.split_edge(edge_to_split, True)
+
 if __name__ == '__main__':
 
     m = NetModule('123')
     edges = m.edges.keys()
-
-    print('split mutation')
     m.split_edge(edges[-1])
-    print('node ids:')
-    print(m.node_ids())
-    ret = 0
-    while ret!=1:
-        n = random.sample(m.nodes, 2)
-        print('sampled', n)
-        e = Edge(len(m.edges)+1, 'fc',  n[0], n[1])
-        ret = m.add_edge(e)
-        print('return', ret)
-        # ret = m.add_edge(e)
+        
+    print "nodes:", m.node_ids()
+
+    for i in range(4):
+        if np.random.random() < 0.5:
+            m.add_random_edge()
+        else:
+            m.split_random_edge()    
+
+    print "edge print out"
+    print "=============="
+    for e in m.edge_ids():
+        print e, ":", m.edges[e].in_node, "->", m.edges[e].out_node
+    inputs = Input(shape=(84,))
+    G = {}
+
+    for nd in m.node_ids():
+        G[nd] = []
     
+    G['in'] = inputs
+
+    visited = set()
+    seen_edge = set()
+    Q = ['in']
+    while Q:
+        node = Q.pop(0)
+        print "->visiting node", node
+        # if node not in visited:
+        
+        in_edges_ = m.nodes[node].inputs
+        go_back = False
+        for in_e in in_edges_:
+            if m.edges[in_e].in_node not in visited:
+                Q.append(m.edges[in_e].in_node)
+                go_back = True
+                break
+        if go_back:
+            print(Q)
+            continue
+
+        visited.add(node)
+        out_edges_ = m.nodes[node].outputs
+        for e in out_edges_:
+            print "---> proc edge ",e, " ", m.edges[e].in_node, "->", m.edges[e].out_node
+            if e not in seen_edge:
+                ins = m.edges[e].in_node
+                outs = m.edges[e].out_node
+                Q.append(outs)
+                # if ins is not 'in':
+                    # Q.append(ins)
+                seen_edge.add(e)
+                x = Dense(5, name='op'+e)(G[ins])
+                
+                if G[outs] == []:
+                    G[outs] = x
+                else:
+                    G[outs] = keras.layers.add([G[outs], x])
+                print("--->add layer: op{}".format(e))
+                print G
+                
+        print '->Q', Q
+    model = Model(inputs, G['out'])
+
+    model.summary()
+
+    plot_model(model, to_file='model.png')
+
+
+        

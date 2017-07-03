@@ -5,7 +5,7 @@ from keras.layers import Dense, Dropout, Flatten, Activation, ELU
 from keras.layers import Conv2D, MaxPooling2D, Input
 from keras import backend as K
 import numpy as np
-
+import Queue.Queue
 
 class CustomModel():
     def __init__(self, build_info):
@@ -39,8 +39,5 @@ class CustomModel():
         return score
 
 
-def build_module(inputs, module):
+# def build_module(inputs, module):
     
-    out_edges = module.nodes['in'].outputs
-
-    for edge in out_edges[]
