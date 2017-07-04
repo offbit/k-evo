@@ -3,25 +3,26 @@ import random
 import networkx as nx
 import copy
 
+import model
 
-import keras
-from keras.models import Sequential, Model
-from keras.layers import Dense, Dropout, Flatten, Activation, ELU
-from keras.layers import Conv2D, MaxPooling2D, Input
-from keras import backend as K
-from keras.utils import plot_model
-from Queue import Queue
+# type of nodes
+nodetypes = ['sum', 'concat', 'multiply']
 
-nodetypes = ['merge', 'activation', 'identity']
+# type of edges
 edgetype = ['fc', 'identity']
-
+space = {}
+space['fc']= {
+        "nb_units":[[32, 1024], 'int'],
+        "activation":[["elu", "relu", "linear", "tanh", "sigmoid"],'list'],
+        "dropout":[[0.0, 0.8], 'float']
+    }
 
 class Node(object):
 
-    def __init__(self, nodeid, nodetype, params=None):
-
+    def __init__(self, nodeid, params):
+        
         self.nodeid = str(nodeid)
-        self.nodetype = nodetype
+        self.params = params
         self.inputs = set()
         self.outputs = set()
         self.inputs_mutable = True
@@ -56,12 +57,13 @@ class NetModule(object):
         
         # one input node
         inputnode_id = 'in'
-        input_node = Node(inputnode_id, 'identity', None)
+        node_p = {"type":"sum"}
+        input_node = Node(inputnode_id, node_p)
         input_node.inputs_mutable = False
         self.add_node(input_node, update_graph=False)
         # one output node
         outputnode_id = 'out'
-        output_node = Node(outputnode_id, 'identity', None)
+        output_node = Node(outputnode_id, node_p)
         output_node.outputs_mutable = False
         self.add_node(output_node, update_graph=False)
         # edge between them
@@ -81,7 +83,6 @@ class NetModule(object):
             self.graph.add_edge(e.in_node, e.out_node)
 
     def valid_graph(self, g):
-        # print(g.nodes())
         cycles = [a for a in nx.simple_cycles(g)]
         if len(cycles) > 0:
             return False
@@ -128,8 +129,10 @@ class NetModule(object):
         
         in_node = self.edges[edgeid].in_node
         out_node = self.edges[edgeid].out_node
+        node_p = {"type":"sum"}
         
-        new_node = Node(len(self.nodes)+1 , 'identity', None)
+        # increase node id by 1
+        new_node = Node(len(self.nodes)+1 , node_p)
         self.add_node(new_node, update_graph=False)
         # new edge added on top 
         
@@ -173,59 +176,5 @@ if __name__ == '__main__':
     print "=============="
     for e in m.edge_ids():
         print e, ":", m.edges[e].in_node, "->", m.edges[e].out_node
-    inputs = Input(shape=(84,))
-    G = {}
-
-    for nd in m.node_ids():
-        G[nd] = []
     
-    G['in'] = inputs
-
-    visited = set()
-    seen_edge = set()
-    Q = ['in']
-    while Q:
-        node = Q.pop(0)
-        print "->visiting node", node
-        # if node not in visited:
-        
-        in_edges_ = m.nodes[node].inputs
-        go_back = False
-        for in_e in in_edges_:
-            if m.edges[in_e].in_node not in visited:
-                Q.append(m.edges[in_e].in_node)
-                go_back = True
-                break
-        if go_back:
-            print(Q)
-            continue
-
-        visited.add(node)
-        out_edges_ = m.nodes[node].outputs
-        for e in out_edges_:
-            print "---> proc edge ",e, " ", m.edges[e].in_node, "->", m.edges[e].out_node
-            if e not in seen_edge:
-                ins = m.edges[e].in_node
-                outs = m.edges[e].out_node
-                Q.append(outs)
-                # if ins is not 'in':
-                    # Q.append(ins)
-                seen_edge.add(e)
-                x = Dense(5, name='op'+e)(G[ins])
-                
-                if G[outs] == []:
-                    G[outs] = x
-                else:
-                    G[outs] = keras.layers.add([G[outs], x])
-                print("--->add layer: op{}".format(e))
-                print G
-                
-        print '->Q', Q
-    model = Model(inputs, G['out'])
-
-    model.summary()
-
-    plot_model(model, to_file='model.png')
-
-
-        
+    mdd = model.build_module(m)

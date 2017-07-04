@@ -1,11 +1,11 @@
 import keras
 from keras.datasets import mnist
-from keras.models import Sequential
+from keras.models import Sequential, Model
 from keras.layers import Dense, Dropout, Flatten, Activation, ELU
 from keras.layers import Conv2D, MaxPooling2D, Input
 from keras import backend as K
 import numpy as np
-import Queue.Queue
+from Queue import Queue
 
 class CustomModel():
     def __init__(self, build_info):
@@ -39,5 +39,58 @@ class CustomModel():
         return score
 
 
-# def build_module(inputs, module):
+def build_module(module):
+    
+    inputs = Input(shape=(84,))
+    G = {}
+
+    for nd in module.node_ids():
+        G[nd] = []
+    
+    G['in'] = inputs
+
+    visited = set()
+    seen_edge = set()
+    Q = ['in']
+    while Q:
+        node = Q.pop(0)
+        
+        # if node not in visited:
+        
+        in_edges_ = module.nodes[node].inputs
+        go_back = False
+        for in_e in in_edges_:
+            if module.edges[in_e].in_node not in visited:
+                Q.append(module.edges[in_e].in_node)
+                go_back = True
+                break
+        if go_back:
+            
+            continue
+
+        visited.add(node)
+        out_edges_ = module.nodes[node].outputs
+        for e in out_edges_:
+            if e not in seen_edge:
+                ins = module.edges[e].in_node
+                outs = module.edges[e].out_node
+                Q.append(outs)
+                # if ins is not 'in':
+                    # Q.append(ins)
+                seen_edge.add(e)
+                x = Dense(5, name='op'+e)(G[ins])
+                
+                if G[outs] == []:
+                    G[outs] = x
+                else:
+                    G[outs] = keras.layers.add([G[outs], x])
+                
+                print G
+                
+        print '->Q', Q
+    model = Model(inputs, G['out'])
+
+    model.summary()
+
+    # plot_model(model, to_file='model.png')
     
