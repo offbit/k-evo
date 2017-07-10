@@ -52,10 +52,15 @@ class CustomWorker(Process):
         #set enviornment
         # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         # os.environ["CUDA_VISIBLE_DEVICES"] = str(self._gpuid)
-        #load models
-        import model
-
-        # print 'model init done', self._gpuid
+        import models
+        K.clear_session()
+        tf_config = tf.ConfigProto()
+        # this needs to be set to 1.0 for local usage
+        tf_config.gpu_options.per_process_gpu_memory_fraction = 0.5
+        tf_config.allow_soft_placement = True
+        tf_config.gpu_options.allow_growth = True
+        set_session(tf.Session(config=tf_config))
+        K.set_session()
 
         while True:
             net = self._queue.get()
