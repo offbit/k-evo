@@ -12,7 +12,6 @@ from keras.utils import plot_model
 class CustomModel():
     def __init__(self, module):
         self.model = build_module(module)
-        # self.model_info = model_info
 
     def train(self, x_train, y_train, x_test, y_test):
         batch_size = 128
@@ -24,9 +23,11 @@ class CustomModel():
         self.model.fit(x_train, y_train,
                        batch_size=batch_size,
                        epochs=epochs,
-                       verbose=1,
+                       verbose=0,
                        validation_data=(x_test, y_test))
         score = self.model.evaluate(x_test, y_test, verbose=0)
+        plot_model(self.model, 
+            to_file='./model_zoo/' +str(np.random.randint(2**8))+'model.png')
 
         return score
 
@@ -66,12 +67,10 @@ def build_module(module):
                 ins = edge.in_node
                 outs = edge.out_node
                 params = edge.params
-                print(edge)
-
                 if params['edgetype'] == 'fc':
-                    x = Dense(params['nb_units'], name='op' + e,
+                    x = Dense(params['nb_units'], name='op_' + e,
                               activation=params['activation'])(net_graph[ins])
-                    x = Dropout(params['dropout'])(x)
+                    x = Dropout(params['dropout'], name='dropout_'+e)(x)
                 else:
                     x = net_graph[ins]
 
@@ -90,7 +89,5 @@ def build_module(module):
         act = 'softmax'
     outputs = Dense(out_dim, activation=act)(net_graph['out'])
     model = Model(inputs, outputs)
-    model.summary()
-
-    plot_model(model, to_file='model.png')
+    # model.summary()
     return model
