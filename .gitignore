@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+XDG_CACHE_HOME/
 
 # C extensions
 *.so

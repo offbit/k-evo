@@ -5,7 +5,7 @@ from keras.layers import Dense, Dropout, Flatten, Activation, ELU
 from keras.layers import Conv2D, MaxPooling2D, Input
 from keras import backend as K
 import numpy as np
-from Queue import Queue
+from queue import Queue
 from keras.utils import plot_model
 
 

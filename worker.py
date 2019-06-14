@@ -114,8 +114,8 @@ class CustomWorker(Process):
             xnet  = models.CustomModel(net)
             score = xnet.train(self.x_train, self.y_train, self.x_test, self.y_test)
             
-            print 'woker', self._gpuid, ' score', score[1]
+            print('woker', self._gpuid, ' score', score[1])
             del xnet
             self._results.put((score[1], net))
-        print 'Net done ', self._gpuid
+        print('Net done ', self._gpuid)
 

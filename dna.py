@@ -200,7 +200,7 @@ class NetModule(object):
     def add_random_edge(self, edgetype=None):
         ret = -1
         while (ret == -1):
-            selected_nodes = random.sample(self.nodes, 2)
+            selected_nodes = random.sample(list(self.nodes), 2)
             edge_params = self.random_edge_params(edgetype)
             e = Edge(len(self.edges) + 1, selected_nodes[0], selected_nodes[1], params=edge_params)
 
@@ -246,7 +246,7 @@ class NetModule(object):
         elif mutation == 'split_edge':
             self.split_random_edge()
         elif mutation == 'mutate_edge':            
-            e = random.choice(self.edges.keys())
+            e = random.choice(list(self.edges.keys()))
             print('edge e', e)
             self.mutate_edge(e)
         elif mutation == 'mutate_opt':
@@ -257,7 +257,7 @@ def random_net(netid, input_dim, output_dim, num_mutations, classifier=True):
 
     m = NetModule(netid, input_dim=input_dim,
                   output_dim=output_dim, has_softmax=classifier)
-    edges = m.edges.keys()
+    edges = list(m.edges.keys())
     m.split_edge(edges[-1])
     n = np.random.randint(1,num_mutations)
     for i in range(n):
@@ -272,8 +272,8 @@ def random_net(netid, input_dim, output_dim, num_mutations, classifier=True):
 if __name__ == '__main__':
 
     m = random_net('33', 28 * 28, 10, 5, True)
-    print "edge print out"
-    print "=============="
+    print("edge print out")
+    print("==============")
     for e in m.edge_ids():
         # print e, ":", m.edges[e].in_node, "->", m.edges[e].out_node, 'type:',  m.edges[e].params['edgetype']
         print(m.edges[e])
